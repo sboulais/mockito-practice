@@ -7,16 +7,19 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.Month;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.*;
 
+/**
+ * Contrairement à un mock, qui est une coquille vide ne contenant aucune logique réelle, un spy (espion)
+ * est un "wrapper" autour d'une instance réelle d'une classe.
+ * - Un mock renvoie des valeurs par défaut (ex: null ou 0) à moins que vous ne définissiez un comportement.
+ * - Un spy appelle les vraies méthodes de l'objet, à moins que vous ne décidiez d'en simuler certaines
+ */
 class Test08Spies {
 
     private BookingService bookingService;
     private PaymentService paymentServiceMock;
     private RoomService roomServiceMock;
-    private BookingDAO bookingDAOMock;
     private BookingDAO bookingDAOSpy;
     private MailSender mailSenderMock;
 
@@ -24,7 +27,6 @@ class Test08Spies {
     void setUp() {
         paymentServiceMock = mock(PaymentService.class);
         roomServiceMock = mock(RoomService.class);
-        bookingDAOMock = mock(BookingDAO.class);
         bookingDAOSpy = spy(BookingDAO.class);
         mailSenderMock = mock(MailSender.class);
         bookingService = new BookingService(paymentServiceMock, roomServiceMock, bookingDAOSpy, mailSenderMock);
@@ -48,7 +50,8 @@ class Test08Spies {
         String id = bookingService.makeBooking(bookingRequest);
 
         // then
-        // Vérifie que la méthode save du DAO booking est appelée
+        // Vérifie que la méthode save de la classe BookingDAO est bien appelée
+        // par makeBooking
         verify(bookingDAOSpy).save(bookingRequest);
         System.out.println("Boooking ID = " + id);
     }
@@ -66,12 +69,17 @@ class Test08Spies {
         bookingRequest.setRoomId("1.3");
         String bookingId = "1";
 
-        // Je n'ai rien compris, à revoir !
+        /**
+         * La méthode cancelBooking essaiera d'obtenir réellement un objet
+         * BookingRequest. Ce n'est pas ce que nous voulons, il faut
+         * donc changer le comportement de l'espion BookingDAO :
+         **/
         doReturn(bookingRequest).when(bookingDAOSpy).get(bookingId);
 
         // when
         bookingService.cancelBooking(bookingId);
 
         // then
+        verify(bookingDAOSpy).delete(bookingId);
     }
 }

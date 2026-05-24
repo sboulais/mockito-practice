@@ -21,5 +21,4 @@ public class BookingDAO {
 	public void delete(String bookingId) {
 		bookings.remove(bookingId);
 	}
-
 }
